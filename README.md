@@ -7,7 +7,7 @@ A flexible router for [telebot v4](https://github.com/tucnak/telebot) inspired b
 ## Installation
 
 ```bash
-go get github.com/LZTD1/telebot-router@v1.0.0
+go get github.com/LZTD1/telebot-context-router@v1.0.1
 ```
 ## How It Works (Core Principle)
 

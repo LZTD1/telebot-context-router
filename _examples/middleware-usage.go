@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	router "github.com/LZTD1/telebot-router"
+	router "github.com/LZTD1/telebot-context-router"
 	"gopkg.in/telebot.v4"
 )
 
