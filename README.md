@@ -1,5 +1,6 @@
 # Telebot Context Router
 [![Go Reference](https://pkg.go.dev/badge/github.com/LZTD1/telebot-context-router.svg)](https://pkg.go.dev/github.com/LZTD1/telebot-context-router)
+![ChatGPT Image 3 апр  2025 г , 20_53_40](https://github.com/user-attachments/assets/0ec2d68b-6291-4f78-840e-43b00e46ed16)
 
 A flexible router for [telebot v4](https://github.com/tucnak/telebot) inspired by `go-chi`. This router provides easy routing for text messages and callback queries in your Telegram bots, supporting middleware and route grouping.
 
