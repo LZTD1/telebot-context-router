@@ -272,13 +272,21 @@ func (m *Mux) ServeContext(ctx telebot.Context) error {
 		return handler.ServeContext(ctx)
 	}
 
+	isHandeled := false
 	for _, entry := range regexSlice {
 		if entry.regex.MatchString(input) {
-			return entry.handler.ServeContext(ctx)
+			err := entry.handler.ServeContext(ctx)
+			if err != nil {
+				return err
+			}
+			isHandeled = true
 		}
 	}
 
-	return m.NotFoundHandler()(ctx)
+	if !isHandeled {
+		return m.NotFoundHandler()(ctx)
+	}
+	return nil
 }
 
 // HandlerFunc is an adapter type that allows a regular telebot.HandlerFunc
