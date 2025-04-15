@@ -34,7 +34,7 @@ func main() {
 	// This regex matches "/user " followed by one or more digits, capturing the digits.
 	userCommandRegex := regexp.MustCompile(`^/user (\d+)$`)
 	// This regex matches "view_item:" followed by one or more characters, capturing the part after the colon.
-	viewItemCallbackRegex := regexp.MustCompile(`^view_item:(.+)$`)
+	viewItemCallbackRegex := regexp.MustCompile(`^\fview_item:(.+)$`)
 
 	// --- Register Regex Text Handler ---
 	r.HandleFuncRegexpText(userCommandRegex, func(c telebot.Context) error {

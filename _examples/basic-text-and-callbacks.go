@@ -53,7 +53,7 @@ func main() {
 	// --- Register Exact Callback Query Handlers ---
 
 	// Handle the callback data "show_help_callback" sent by the button
-	r.HandleFuncCallback("show_help_callback", func(c telebot.Context) error {
+	r.HandleFuncCallback("\fshow_help_callback", func(c telebot.Context) error {
 		log.Printf("Handler: Received 'show_help_callback' callback from %s", c.Sender().Username)
 
 		err := c.Respond(&telebot.CallbackResponse{

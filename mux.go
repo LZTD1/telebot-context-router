@@ -268,22 +268,37 @@ func (m *Mux) ServeContext(ctx telebot.Context) error {
 		return m.NotFoundHandler()(ctx)
 	}
 
-	if handler, ok := exactMap[input]; ok {
-		return handler.ServeContext(ctx)
+	// wrapping context
+	wasHandled := false
+	markHandled := func() {
+		wasHandled = true
+	}
+	apiWithMark := &wrappedBot{
+		API:         ctx.Bot(),
+		markHandled: markHandled,
+	}
+	ctxWrapped := &wrappedContext{
+		Context: ctx,
+		api:     apiWithMark,
 	}
 
-	isHandeled := false
+	// handling
+	if handler, ok := exactMap[input]; ok {
+		return handler.ServeContext(ctxWrapped)
+	}
+
 	for _, entry := range regexSlice {
 		if entry.regex.MatchString(input) {
-			err := entry.handler.ServeContext(ctx)
-			if err != nil {
+			if err := entry.handler.ServeContext(ctxWrapped); err != nil {
 				return err
 			}
-			isHandeled = true
+			if ctxWrapped.handled || wasHandled {
+				return nil
+			}
 		}
 	}
 
-	if !isHandeled {
+	if !ctxWrapped.handled && !wasHandled {
 		return m.NotFoundHandler()(ctx)
 	}
 	return nil

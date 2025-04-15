@@ -7,7 +7,7 @@ A flexible router for [telebot v4](https://github.com/tucnak/telebot) inspired b
 ## Installation
 
 ```bash
-go get github.com/LZTD1/telebot-context-router@v1.1.0
+go get github.com/LZTD1/telebot-context-router@v1.2.0
 ```
 ## How It Works (Core Principle)
 
@@ -19,6 +19,8 @@ This router simplifies handling Telegram updates by providing two main ways to m
 The router first checks for an exact match. If none is found, it then checks the input against your registered regular expression patterns one by one until a match occurs.
 
 Additionally, the router supports **Middleware**. Think of middleware as processing steps that can run *before* your main handler logic executes.
+
+To ensure proper handling, the router wraps the `telebot.Context` to track if the context has already been processed (e.g., a message has been sent or edited). This prevents fallback to the "not found" handler when the context has been handled earlier in the routing process.
 
 ## Simple Example Usage
 
@@ -56,7 +58,6 @@ func main() {
 }
 ```
 
-
 ## Examples
 
 For more detailed examples covering specific features, please see the _examples directory (you will need to create this directory and the files):
@@ -65,6 +66,8 @@ For more detailed examples covering specific features, please see the _examples 
 - [Using Regular Expressions: Matching commands or callback data with patterns (e.g., /user_(\d+), view_item:(.*)).](./_examples/regular-exp.go)
 - [Middleware Usage: Applying global middleware (Use) and scoped middleware (Group, With) for logging, authentication, etc.](./_examples/middleware-usage.go)
 
+## UPDATES
+- **v1.2.0**: Added context wrapping functionality to track whether the context has been processed.
 
 ## License
 Licensed under [MIT License](./LICENSE)
