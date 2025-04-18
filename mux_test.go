@@ -113,6 +113,28 @@ func TestMux(t *testing.T) {
 		assert.Contains(t, ctx.sent, "marked")
 	})
 
+	t.Run("Not access to mw and return notFound", func(t *testing.T) {
+		mux := NewRouter()
+
+		mux.With(func(routeHandler RouteHandler) RouteHandler {
+			return HandlerFunc(func(c tb.Context) error {
+				return nil
+			})
+		}).HandleFuncText("/ghost", func(ctx tb.Context) error {
+			return ctx.Send("")
+		})
+
+		mux.NotFound(func(ctx tb.Context) error {
+			return ctx.Send("not found from ghost")
+		})
+
+		ctx := &mockContext{text: "/ghost"}
+		err := mux.ServeContext(ctx)
+
+		assert.NoError(t, err)
+		assert.Contains(t, ctx.sent, "not found from ghost")
+	})
+
 	t.Run("Group Middleware Inheritance", func(t *testing.T) {
 		mux := NewRouter()
 		var trace []string

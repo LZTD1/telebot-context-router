@@ -284,7 +284,10 @@ func (m *Mux) ServeContext(ctx telebot.Context) error {
 
 	// handling
 	if handler, ok := exactMap[input]; ok {
-		return handler.ServeContext(ctxWrapped)
+		err := handler.ServeContext(ctxWrapped)
+		if ctxWrapped.handled || wasHandled {
+			return err
+		}
 	}
 
 	for _, entry := range regexSlice {

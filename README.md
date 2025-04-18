@@ -7,7 +7,7 @@ A flexible router for [telebot v4](https://github.com/tucnak/telebot) inspired b
 ## Installation
 
 ```bash
-go get github.com/LZTD1/telebot-context-router@v1.2.1
+go get github.com/LZTD1/telebot-context-router@v1.3.0
 ```
 ## How It Works (Core Principle)
 
@@ -67,6 +67,8 @@ For more detailed examples covering specific features, please see the _examples 
 - [Middleware Usage: Applying global middleware (Use) and scoped middleware (Group, With) for logging, authentication, etc.](./_examples/middleware-usage.go)
 
 ## UPDATES
+- **v1.3.0**: Context now ensures that NotFound is called unless an exact match marks the context as processed
+- **v1.2.1**: Changing `_examples` to be more concise
 - **v1.2.0**: Added context wrapping functionality to track whether the context has been processed.
 
 ## License
