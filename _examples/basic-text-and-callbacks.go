@@ -3,7 +3,6 @@ package _examples
 import (
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	router "github.com/LZTD1/telebot-context-router"
@@ -11,10 +10,7 @@ import (
 )
 
 func main() {
-	botToken := os.Getenv("BOT_TOKEN")
-	if botToken == "" {
-		log.Fatal("BOT_TOKEN environment variable not set")
-	}
+	botToken := "INSERT_TOKEN"
 
 	pref := telebot.Settings{
 		Token:  botToken,
@@ -32,14 +28,18 @@ func main() {
 	// Handle the "/start" text command
 	r.HandleFuncText("/start", func(c telebot.Context) error {
 		log.Printf("Handler: Received /start from %s", c.Sender().Username)
+
 		kbd := &telebot.ReplyMarkup{}
-		kbd.Row(
-			kbd.URL("Visit Repo", "https://github.com/LZTD1/telebot-router"),
-			kbd.Data("Show Help", "show_help_callback"),
+
+		kbd.Inline(
+			kbd.Row(
+				kbd.URL("Visit Repo", "https://github.com/LZTD1/telebot-context-router"),
+				kbd.Data("Show Help", "show_help_callback"),
+			),
 		)
 
 		return c.Send(
-			fmt.Sprintf("Hello, %s! Welcome to the basic router example.", c.Sender().FirstName),
+			fmt.Sprintf("Hello, %s!\n\n Welcome to the basic router example.", c.Sender().FirstName),
 			kbd,
 		)
 	})
@@ -64,6 +64,11 @@ func main() {
 		}
 
 		return c.Send("Available commands:\n/start - Show welcome message and buttons\nHelp - Show this help message")
+	})
+
+	r.NotFound(func(ctx telebot.Context) error {
+		log.Printf("Recivied unknown command %s", ctx.Message().Text)
+		return ctx.Send("Hmm... i dont know this command")
 	})
 
 	// --- Connect Router to Telebot ---

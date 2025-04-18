@@ -3,81 +3,55 @@ package _examples
 import (
 	"fmt"
 	"log"
-	"os"
-	"strconv"
+	"math/rand"
 	"time"
 
 	router "github.com/LZTD1/telebot-context-router"
 	"gopkg.in/telebot.v4"
 )
 
-// --- Mock User Roles (Replace with your actual role logic) ---
-var userRoles = map[int64]string{
-	111111: "admin",
-	222222: "moderator",
-	333333: "user",
-}
-
-func getUserRole(userID int64) string {
-	role, ok := userRoles[userID]
-	if !ok {
-		return "guest"
+var (
+	ADMIN_IDS = map[int64]interface{}{
+		111: "",
+		222: "",
 	}
-	return role
-}
+)
 
 // --- Middleware Definitions ---
 
-// LoggerMiddleware logs basic information about incoming updates.
-func LoggerMiddleware(next router.RouteHandler) router.RouteHandler {
+// RandomAccessMw Provides random access to the command
+func RandomAccessMw(next router.RouteHandler) router.RouteHandler {
 	return router.HandlerFunc(func(c telebot.Context) error {
-		start := time.Now()
-		userId := c.Sender().ID
-		log.Printf("[Log] --> Update %d received from User %d (%s)", c.Update().ID, userId, getUserRole(userId))
-
-		err := next.ServeContext(c)
-
-		log.Printf("[Log] <-- Update %d processed in %v. Error: %v", c.Update().ID, time.Since(start), err)
-		return err
+		if rand.Intn(100) > 50 {
+			return next.ServeContext(c)
+		}
+		log.Printf("[RandomAccessMw] access denined")
+		return nil
 	})
 }
 
-// RequireRoleMiddleware checks if the user has at least the required role.
-func RequireRoleMiddleware(requiredRole string) func(next router.RouteHandler) router.RouteHandler {
-	roleHierarchy := map[string]int{
-		"guest":     0,
-		"user":      1,
-		"moderator": 2,
-		"admin":     3,
-	}
+// LoggerMw logs user requests
+func LoggerMw(next router.RouteHandler) router.RouteHandler {
+	return router.HandlerFunc(func(c telebot.Context) error {
+		log.Printf("[LoggerMw] recivied context from %s", c.Sender().Username)
+		return next.ServeContext(c)
+	})
+}
 
-	requiredLevel, ok := roleHierarchy[requiredRole]
-	if !ok {
-		log.Fatalf("FATAL: Invalid role specified in RequireRoleMiddleware: %s", requiredRole)
-	}
+// AdminFilterMw filters admin
+func AdminFilterMw(next router.RouteHandler) router.RouteHandler {
+	return router.HandlerFunc(func(c telebot.Context) error {
+		if _, ok := ADMIN_IDS[c.Sender().ID]; ok {
+			return next.ServeContext(c)
+		}
 
-	return func(next router.RouteHandler) router.RouteHandler {
-		return router.HandlerFunc(func(c telebot.Context) error {
-			userRole := getUserRole(c.Sender().ID)
-			userLevel := roleHierarchy[userRole]
-
-			if userLevel >= requiredLevel {
-				log.Printf("[%s Auth] Access granted for user %d (Role: %s >= Required: %s)", requiredRole, c.Sender().ID, userRole, requiredRole)
-				return next.ServeContext(c)
-			}
-
-			log.Printf("[%s Auth] Access DENIED for user %d (Role: %s < Required: %s)", requiredRole, c.Sender().ID, userRole, requiredRole)
-			_ = c.Send(fmt.Sprintf("Access Denied. Required role: %s", requiredRole))
-			return nil
-		})
-	}
+		log.Printf("[AdminFilterMw] access denined")
+		return nil
+	})
 }
 
 func main() {
-	botToken := os.Getenv("BOT_TOKEN")
-	if botToken == "" {
-		log.Fatal("BOT_TOKEN environment variable not set")
-	}
+	botToken := "INSERT_TOKEN"
 
 	// --- Bot Setup ---
 	pref := telebot.Settings{
@@ -95,48 +69,31 @@ func main() {
 	r := router.NewRouter()
 
 	// --- Apply Global Middleware using r.Use() ---
-	r.Use(LoggerMiddleware)
+	r.Use(LoggerMw)
 
 	// --- Public Routes (No specific role required) ---
 	r.HandleFuncText("/start", func(c telebot.Context) error {
-		role := getUserRole(c.Sender().ID)
-		return c.Send(fmt.Sprintf("Welcome! Your detected role is: %s", role))
-	})
-	r.HandleFuncText("/help", func(c telebot.Context) error {
-		return c.Send("Public help message...")
+		return c.Send(fmt.Sprintf("Welcome!\nTry:\n/rnd - get a random chance to access data\n/ap - admin panel"))
 	})
 
-	// --- Group for Moderator Routes ---
-	r.Group(func(modRouter router.Router) {
+	// -- Route with middleware
+	r.With(RandomAccessMw).HandleFuncText("/rnd", func(ctx telebot.Context) error {
+		log.Printf("user %s accessed to /rnd endpoint", ctx.Sender().Username)
+		return ctx.Send("Happy hacking!")
+	})
+
+	// --- Group for admin Routes ---
+	r.Group(func(r router.Router) {
 		// Apply middleware specific to this group
-		modRouter.Use(RequireRoleMiddleware("moderator"))
+		r.Use(AdminFilterMw)
 
-		modRouter.HandleFuncText("/warn", func(c telebot.Context) error {
-			return c.Send("Moderator command: Warn user...")
+		r.HandleFuncText("/ap", func(c telebot.Context) error {
+			return c.Send("You can use this commands:\n\n/ap - admin panel\n/restart - restart server")
 		})
 
-		modRouter.HandleFuncText("/mute", func(c telebot.Context) error {
-			return c.Send("Moderator command: Mute user...")
+		r.HandleFuncText("/restart", func(c telebot.Context) error {
+			return c.Send("Server restarting...")
 		})
-	})
-
-	// --- Group for Admin Routes ---
-	r.Group(func(adminRouter router.Router) {
-		adminRouter.Use(RequireRoleMiddleware("admin"))
-
-		adminRouter.HandleFuncText("/ban", func(c telebot.Context) error {
-			return c.Send("Admin command: Ban user...")
-		})
-
-		adminRouter.HandleFuncText("/config", func(c telebot.Context) error {
-			return c.Send("Admin command: Show configuration...")
-		})
-	})
-
-	// --- Route with Inline Middleware using r.With() ---
-	r.With(RequireRoleMiddleware("user")).HandleFuncText("/profile", func(c telebot.Context) error {
-		userIDstr := strconv.FormatInt(c.Sender().ID, 10)
-		return c.Send("Showing profile for user " + userIDstr)
 	})
 
 	// --- Register a NotFound Handler ---

@@ -3,7 +3,6 @@ package _examples
 import (
 	"fmt"
 	"log"
-	"os"
 	"regexp"
 	"time"
 
@@ -12,10 +11,7 @@ import (
 )
 
 func main() {
-	botToken := os.Getenv("BOT_TOKEN")
-	if botToken == "" {
-		log.Fatal("BOT_TOKEN environment variable not set")
-	}
+	botToken := "INSERT_TOKEN"
 
 	pref := telebot.Settings{
 		Token:  botToken,
@@ -34,6 +30,7 @@ func main() {
 	// This regex matches "/user " followed by one or more digits, capturing the digits.
 	userCommandRegex := regexp.MustCompile(`^/user (\d+)$`)
 	// This regex matches "view_item:" followed by one or more characters, capturing the part after the colon.
+	// You need to insert \f before the callback data because that's how telebot works
 	viewItemCallbackRegex := regexp.MustCompile(`^\fview_item:(.+)$`)
 
 	// --- Register Regex Text Handler ---
@@ -72,9 +69,11 @@ func main() {
 	r.HandleFuncText("/start", func(c telebot.Context) error {
 		log.Printf("Handler: Received /start from %s", c.Sender().Username)
 		kbd := &telebot.ReplyMarkup{}
-		kbd.Row(
-			kbd.Data("View Item ABC", "view_item:ABC"),
-			kbd.Data("View Item 123", "view_item:123"),
+		kbd.Inline(
+			kbd.Row(
+				kbd.Data("View Item ABC", "view_item:ABC"),
+				kbd.Data("View Item 123", "view_item:123"),
+			),
 		)
 
 		return c.Send(
