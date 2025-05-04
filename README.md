@@ -60,7 +60,7 @@ func main() {
 
 ## Examples
 
-For more detailed examples covering specific features, please see the _examples directory (you will need to create this directory and the files):
+For more detailed examples covering specific features, please see the _examples directory:
 
 - [Basic Text and Callbacks: Handling simple commands and button presses.](./_examples/basic-text-and-callbacks.go)
 - [Using Regular Expressions: Matching commands or callback data with patterns (e.g., /user_(\d+), view_item:(.*)).](./_examples/regular-exp.go)
